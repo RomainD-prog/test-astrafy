@@ -1,0 +1,56 @@
+name: dbt CI
+
+# Runs dbt on every pull request (creation and new commits).
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "dbt/**"
+      - ".github/workflows/dbt_pr.yml"
+
+# Required for Workload Identity Federation (OIDC token).
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: dbt-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dbt-build:
+    name: dbt build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbt
+
+    env:
+      DBT_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      DBT_STAGING_DATASET: staging
+      DBT_BQ_LOCATION: US
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud (Workload Identity Federation)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dbt
+        run: pip install "dbt-bigquery~=1.8"
+
+      - name: Install dbt packages
+        run: dbt deps
+
+      - name: dbt build
+        run: dbt build --target ci

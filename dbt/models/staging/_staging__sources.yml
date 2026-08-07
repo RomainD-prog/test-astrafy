@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: crypto_bitcoin_cash
+    description: "Public Bitcoin Cash blockchain dataset maintained by Google."
+    database: bigquery-public-data
+    schema: crypto_bitcoin_cash
+    tables:
+      - name: transactions
+        description: >
+          One row per transaction. `inputs` and `outputs` are nested/repeated
+          records; each carries a repeated `addresses` field and a `value`
+          (in satoshis). `is_coinbase` flags mining-reward transactions.
+        columns:
+          - name: hash
+            description: "Transaction hash (unique identifier)."
+          - name: block_timestamp
+            description: "Timestamp of the block containing the transaction."
+          - name: block_timestamp_month
+            description: "Month partition column (DATE truncated to month)."
+          - name: is_coinbase
+            description: "True for coinbase (mining reward) transactions."

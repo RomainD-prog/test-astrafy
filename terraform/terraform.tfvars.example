@@ -1,0 +1,23 @@
+# Copy to terraform.tfvars and fill in your values.
+# ---------------------------------------------------------------------------
+
+# Globally-unique ID of the project Terraform will CREATE.
+project_id = "astrafy-btc-cash-analytics"
+
+# Billing account to attach (Console > Billing, format XXXXXX-XXXXXX-XXXXXX).
+billing_account = "000000-000000-000000"
+
+# Provide EITHER org_id OR folder_id (folder_id wins if both are set).
+org_id    = "123456789012"
+folder_id = ""
+
+# GitHub repo allowed to run dbt via Workload Identity Federation.
+github_repository = "your-org/test-astrafy"
+
+# Optional overrides (defaults shown).
+# project_name         = "Crypto Bitcoin Cash Analytics"
+# region               = "europe-west1"
+# bq_location          = "EU"
+# staging_dataset_id   = "staging"
+# data_mart_dataset_id = "data_mart"
+# dbt_service_account_id = "dbt-runner"

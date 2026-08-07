@@ -1,0 +1,32 @@
+# dbt profile for BigQuery.
+#
+# Authentication uses `oauth` = Application Default Credentials (ADC):
+#   - locally:  `gcloud auth application-default login`
+#   - in CI:    google-github-actions/auth (Workload Identity Federation)
+#               sets GOOGLE_APPLICATION_CREDENTIALS automatically.
+#
+# No JSON key is ever stored in the repo.
+crypto_bitcoin_cash:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_PROJECT_ID') }}"
+      dataset: "{{ env_var('DBT_STAGING_DATASET', 'staging') }}"
+      location: "{{ env_var('DBT_BQ_LOCATION', 'US') }}"
+      threads: 4
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      priority: interactive
+
+    ci:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_PROJECT_ID') }}"
+      dataset: "{{ env_var('DBT_STAGING_DATASET', 'staging') }}"
+      location: "{{ env_var('DBT_BQ_LOCATION', 'US') }}"
+      threads: 4
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+      priority: interactive

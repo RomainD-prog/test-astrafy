@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars and fill in.
+state_project_id  = "my-existing-seed-project"
+state_bucket_name = "astrafy-btc-cash-tfstate"
+region            = "europe-west1"

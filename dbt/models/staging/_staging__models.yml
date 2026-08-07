@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_transactions
+    description: >
+      Last {{ var('transactions_lookback_months', 3) }} months of Bitcoin Cash
+      transactions, materialized as a table in the `staging` dataset.
+    columns:
+      - name: transaction_hash
+        description: "Unique transaction hash."
+        data_tests:
+          - not_null
+          - unique
+      - name: block_timestamp
+        description: "Block timestamp; used to restrict to the last N months."
+        data_tests:
+          - not_null
+      - name: is_coinbase
+        description: "True for coinbase (mining reward) transactions."
+        data_tests:
+          - not_null

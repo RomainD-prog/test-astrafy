@@ -1,0 +1,29 @@
+name: "crypto_bitcoin_cash"
+version: "1.0.0"
+config-version: 2
+
+profile: "crypto_bitcoin_cash"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# How many months of raw transactions to keep in staging.
+vars:
+  transactions_lookback_months: 3
+
+models:
+  crypto_bitcoin_cash:
+    staging:
+      +materialized: table
+      +schema: staging
+    marts:
+      +materialized: table
+      +schema: data_mart

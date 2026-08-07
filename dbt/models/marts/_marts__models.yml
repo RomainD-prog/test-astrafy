@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: address_balances
+    description: >
+      Current balance per Bitcoin Cash address over the staging window,
+      excluding any address that appeared in a coinbase transaction.
+      Materialized as a table in the `data_mart` dataset.
+    columns:
+      - name: address
+        description: "Bitcoin Cash address."
+        data_tests:
+          - not_null
+          - unique
+      - name: balance_satoshi
+        description: "Net balance in satoshis (credits - debits)."
+        data_tests:
+          - not_null
+      - name: balance_bch
+        description: "Net balance converted to BCH (satoshi / 1e8)."
