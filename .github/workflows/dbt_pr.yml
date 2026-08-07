@@ -4,9 +4,6 @@ name: dbt CI
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - "dbt/**"
-      - ".github/workflows/dbt_pr.yml"
 
 # Required for Workload Identity Federation (OIDC token).
 permissions:
