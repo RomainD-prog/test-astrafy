@@ -145,3 +145,4 @@ flowchart LR
 | IaC / GitOps | Terraform + GitHub Actions + ArgoCD/Flux | — |
 
 **Trade-offs assumés** : BigQuery est retenu malgré l'exigence "open-source" car c'est le moteur analytique de référence sur GCP ; on limite le lock-in via BigLake/Iceberg et une couche de transfo portable (dbt). SAP est le connecteur le plus délicat (extraction dédiée SLT/Datasphere si les connecteurs Airbyte sont insuffisants). Le PDF détaille ces choix.
+

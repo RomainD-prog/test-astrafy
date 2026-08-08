@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Astrafy — Design Challenge : Plateforme Data GCP</title>
+<style>
+  @page { size: A4 landscape; margin: 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #0f172a; margin: 0; font-size: 12px; line-height: 1.5;
+  }
+  h1 { font-size: 22px; margin: 0 0 2px; color: #0f172a; }
+  h2 { font-size: 15px; margin: 18px 0 6px; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 3px; }
+  h3 { font-size: 13px; margin: 10px 0 4px; color: #334155; }
+  .sub { color: #64748b; font-size: 12px; margin: 0 0 6px; }
+  .page { page-break-after: always; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 11px; }
+  th, td { border: 1px solid #e2e8f0; padding: 5px 7px; text-align: left; vertical-align: top; }
+  th { background: #f1f5f9; color: #1e293b; }
+  ul { margin: 4px 0 4px 18px; padding: 0; }
+  li { margin: 2px 0; }
+  .tag { display: inline-block; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;
+         border-radius: 4px; padding: 1px 6px; font-size: 10px; margin-right: 4px; }
+  .cols { display: flex; gap: 18px; }
+  .col { flex: 1; }
+  .note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 8px 10px; margin: 6px 0; }
+  .foot { color: #94a3b8; font-size: 10px; margin-top: 10px; }
+  svg { width: 100%; height: auto; }
+</style>
+</head>
+<body>
+
+<!-- PAGE 1 : Titre + contexte + diagramme -->
+<div class="page">
+  <h1>Plateforme analytique moderne sur Google Cloud</h1>
+  <p class="sub">Astrafy — Take-Home Challenge (Data Engineer) · Partie 1 : Design Challenge</p>
+
+  <div class="cols">
+    <div class="col">
+      <h3>Contexte</h3>
+      <p>Le client a plusieurs sources de données très différentes : des bases transactionnelles
+      (PostgreSQL, MySQL, MongoDB) et des applications métier (SAP, Salesforce, SurveyMonkey). Il veut
+      repartir sur une base analytique saine, capable à la fois d'alimenter les <b>dashboards BI</b> des
+      différents départements et de servir de socle aux <b>modèles ML</b> de recommandation et de prédiction.</p>
+    </div>
+    <div class="col">
+      <h3>Exigences</h3>
+      <ul>
+        <li><b>Google Cloud</b> comme plateforme d'hébergement</li>
+        <li><b>Open-source</b> au maximum (limiter le lock-in)</li>
+        <li>Fort accent sur le <b>GitOps</b> et le <b>DataOps</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Architecture cible — lakehouse GitOps</h2>
+  <svg viewBox="0 0 1120 540" xmlns="http://www.w3.org/2000/svg" font-family="inherit">
+    <defs>
+      <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L7,3 L0,6 Z" fill="#475569"/>
+      </marker>
+      <style>
+        .grp  { fill:#f8fafc; stroke:#94a3b8; stroke-width:1.2; rx:10; }
+        .glbl { font-size:12px; font-weight:700; fill:#475569; }
+        .src  { fill:#eef2ff; stroke:#6366f1; }
+        .ing  { fill:#ecfeff; stroke:#06b6d4; }
+        .gcs  { fill:#e0f2fe; stroke:#0284c7; }
+        .bq   { fill:#fef9c3; stroke:#ca8a04; }
+        .ml   { fill:#dcfce7; stroke:#16a34a; }
+        .srv  { fill:#fce7f3; stroke:#db2777; }
+        .ops  { fill:#ffffff; stroke:#475569; }
+        .box  { stroke-width:1.2; rx:7; }
+        .t    { font-size:11px; fill:#0f172a; }
+        .tb   { font-size:11px; fill:#0f172a; font-weight:600; }
+        .flow { stroke:#475569; stroke-width:1.6; fill:none; marker-end:url(#arrow); }
+      </style>
+    </defs>
+
+    <!-- SOURCES -->
+    <rect class="grp" x="16" y="40" width="176" height="252" rx="10"/>
+    <text class="glbl" x="26" y="34">Sources</text>
+    <rect class="box src" x="30" y="52"  width="148" height="30" rx="7"/><text class="t" x="40" y="71">PostgreSQL</text>
+    <rect class="box src" x="30" y="90"  width="148" height="30" rx="7"/><text class="t" x="40" y="109">MySQL</text>
+    <rect class="box src" x="30" y="128" width="148" height="30" rx="7"/><text class="t" x="40" y="147">MongoDB</text>
+    <rect class="box src" x="30" y="166" width="148" height="30" rx="7"/><text class="t" x="40" y="185">SAP</text>
+    <rect class="box src" x="30" y="204" width="148" height="30" rx="7"/><text class="t" x="40" y="223">Salesforce</text>
+    <rect class="box src" x="30" y="242" width="148" height="30" rx="7"/><text class="t" x="40" y="261">SurveyMonkey</text>
+
+    <!-- INGESTION -->
+    <rect class="grp" x="218" y="40" width="186" height="252" rx="10"/>
+    <text class="glbl" x="228" y="34">Ingestion (EL / CDC)</text>
+    <rect class="box ing" x="232" y="58"  width="158" height="48" rx="7"/>
+    <text class="tb" x="242" y="78">Airbyte / Meltano</text><text class="t" x="242" y="94">EL par lots</text>
+    <rect class="box ing" x="232" y="120" width="158" height="48" rx="7"/>
+    <text class="tb" x="242" y="140">Debezium (CDC)</text><text class="t" x="242" y="156">temps réel</text>
+    <rect class="box ing" x="232" y="182" width="158" height="40" rx="7"/>
+    <text class="tb" x="242" y="207">Pub/Sub (bus)</text>
+
+    <!-- GCP GROUP -->
+    <rect class="grp" x="430" y="24" width="470" height="340" rx="10" fill="#f8fafc"/>
+    <text class="glbl" x="440" y="18">Google Cloud Platform</text>
+
+    <!-- GCS landing -->
+    <rect class="box gcs" x="446" y="44" width="196" height="42" rx="7"/>
+    <text class="tb" x="456" y="63">Cloud Storage</text><text class="t" x="456" y="79">landing zone (Parquet)</text>
+
+    <!-- BigQuery subgroup -->
+    <rect x="446" y="100" width="196" height="250" rx="9" fill="#fffdf5" stroke="#ca8a04" stroke-dasharray="4 3"/>
+    <text class="glbl" x="456" y="118" fill="#a16207">BigQuery — lakehouse</text>
+    <rect class="box bq" x="460" y="126" width="168" height="58" rx="7"/>
+    <text class="tb" x="470" y="150">Bronze / Raw</text><text class="t" x="470" y="167">tables brutes</text>
+    <rect class="box bq" x="460" y="196" width="168" height="58" rx="7"/>
+    <text class="tb" x="470" y="220">Silver / Staging</text><text class="t" x="470" y="237">dbt</text>
+    <rect class="box bq" x="460" y="266" width="168" height="58" rx="7"/>
+    <text class="tb" x="470" y="290">Gold / Marts</text><text class="t" x="470" y="307">dbt</text>
+
+    <!-- ML subgroup -->
+    <rect x="662" y="100" width="222" height="250" rx="9" fill="#f2fdf5" stroke="#16a34a" stroke-dasharray="4 3"/>
+    <text class="glbl" x="672" y="118" fill="#15803d">Machine Learning</text>
+    <rect class="box ml" x="676" y="128" width="194" height="42" rx="7"/>
+    <text class="tb" x="686" y="147">Feast</text><text class="t" x="686" y="163">feature store</text>
+    <rect class="box ml" x="676" y="184" width="194" height="42" rx="7"/>
+    <text class="tb" x="686" y="203">Vertex AI</text><text class="t" x="686" y="219">train &amp; serving</text>
+    <rect class="box ml" x="676" y="240" width="194" height="42" rx="7"/>
+    <text class="tb" x="686" y="259">MLflow</text><text class="t" x="686" y="275">tracking / registry</text>
+
+    <!-- SERVING -->
+    <rect class="grp" x="926" y="40" width="182" height="252" rx="10"/>
+    <text class="glbl" x="936" y="34">Serving</text>
+    <rect class="box srv" x="940" y="60" width="154" height="96" rx="7"/>
+    <text class="tb" x="950" y="82">Dashboards BI</text>
+    <text class="t" x="950" y="100">Superset /</text>
+    <text class="t" x="950" y="116">Metabase /</text>
+    <text class="t" x="950" y="132">Lightdash</text>
+    <rect class="box srv" x="940" y="176" width="154" height="90" rx="7"/>
+    <text class="tb" x="950" y="198">Endpoints ML</text>
+    <text class="t" x="950" y="216">recommandation</text>
+    <text class="t" x="950" y="232">&amp; prédiction</text>
+
+    <!-- FLOWS -->
+    <path class="flow" d="M192,166 L216,150"/>
+    <path class="flow" d="M404,90 L444,70"/>
+    <path class="flow" d="M544,86 L544,124"/>
+    <path class="flow" d="M544,184 L544,194"/>
+    <path class="flow" d="M544,254 L544,264"/>
+    <path class="flow" d="M628,295 L938,110"/>
+    <path class="flow" d="M628,300 L674,180"/>
+    <path class="flow" d="M773,282 L938,205"/>
+
+    <!-- OPS BAND -->
+    <rect class="grp" x="16" y="392" width="1092" height="120" rx="10" fill="#f1f5f9"/>
+    <text class="glbl" x="26" y="386">Orchestration · DataOps · GitOps (transverse à toutes les couches)</text>
+    <rect class="box ops" x="30"  y="424" width="200" height="70" rx="7"/>
+    <text class="tb" x="40" y="452">Dagster / Airflow</text><text class="t" x="40" y="470">orchestration</text>
+    <rect class="box ops" x="245" y="424" width="200" height="70" rx="7"/>
+    <text class="tb" x="255" y="452">dbt tests + Elementary</text><text class="t" x="255" y="470">qualité &amp; observabilité</text>
+    <rect class="box ops" x="460" y="424" width="200" height="70" rx="7"/>
+    <text class="tb" x="470" y="452">DataHub / Dataplex</text><text class="t" x="470" y="470">catalog &amp; lineage</text>
+    <rect class="box ops" x="675" y="424" width="200" height="70" rx="7"/>
+    <text class="tb" x="685" y="452">Terraform</text><text class="t" x="685" y="470">Infrastructure as Code</text>
+    <rect class="box ops" x="890" y="424" width="200" height="70" rx="7"/>
+    <text class="tb" x="900" y="452">GitHub Actions + ArgoCD</text><text class="t" x="900" y="470">CI/CD &amp; GitOps</text>
+  </svg>
+
+  <p class="foot">Lecture du flux : les données partent des sources, sont ingérées (par lots pour les
+  applications, en CDC pour les bases transactionnelles), atterrissent sur Cloud Storage, puis remontent
+  dans BigQuery en trois couches (Bronze, Silver, Gold) modélisées avec dbt. Elles sont ensuite consommées
+  par la BI et par le ML. L'orchestration et la gouvernance restent transverses à toutes les couches.</p>
+</div>
+
+<!-- PAGE 2 : choix par couche -->
+<div class="page">
+  <h2>Choix technologiques par couche</h2>
+  <table>
+    <tr><th style="width:16%">Couche</th><th style="width:30%">Choix (open-source privilégié)</th><th style="width:30%">Rôle</th><th style="width:24%">Alternative GCP native</th></tr>
+    <tr><td>Ingestion (EL)</td><td>Airbyte / Meltano</td><td>Extraction &amp; chargement multi-connecteurs (PostgreSQL, MySQL, MongoDB, Salesforce, SurveyMonkey)</td><td>Datastream</td></tr>
+    <tr><td>CDC temps réel</td><td>Debezium + Pub/Sub</td><td>Capture des changements sur les bases transactionnelles sans surcharger la source</td><td>Datastream</td></tr>
+    <tr><td>Landing</td><td>Cloud Storage</td><td>Zone d'atterrissage brute, immuable et rejouable (Parquet/Avro)</td><td>—</td></tr>
+    <tr><td>Warehouse / Lakehouse</td><td><b>BigQuery</b> (+ BigLake/Iceberg)</td><td>Moteur analytique serverless ; médaillon Bronze/Silver/Gold</td><td>BigQuery</td></tr>
+    <tr><td>Transformation</td><td><b>dbt-core</b></td><td>Modélisation SQL, tests, docs, lineage, environnements dev/prod</td><td>Dataform</td></tr>
+    <tr><td>Orchestration</td><td>Dagster / Airflow (Cloud Composer)</td><td>Planification &amp; dépendances des pipelines (assets)</td><td>Cloud Composer</td></tr>
+    <tr><td>Qualité data</td><td>dbt tests + Elementary / Great Expectations</td><td>Tests, contrats de données, observabilité</td><td>Dataplex DQ</td></tr>
+    <tr><td>Machine Learning</td><td>Feast + MLflow (+ Vertex AI)</td><td>Feature store, tracking/registry, entraînement &amp; serving</td><td>Vertex AI</td></tr>
+    <tr><td>BI</td><td>Superset / Metabase / Lightdash</td><td>Dashboards par département ; Lightdash s'appuie sur la couche sémantique dbt</td><td>Looker</td></tr>
+    <tr><td>Catalog / gouvernance</td><td>DataHub / OpenMetadata</td><td>Catalogue, lineage, data mesh, gouvernance</td><td>Dataplex</td></tr>
+    <tr><td>IaC / GitOps</td><td>Terraform + GitHub Actions + ArgoCD/Flux</td><td>Provisioning cloud &amp; déploiement déclaratif des outils sur GKE</td><td>—</td></tr>
+  </table>
+
+  <div class="cols">
+    <div class="col">
+      <h3>Pourquoi cette approche</h3>
+      <ul>
+        <li>Les trois couches (Bronze, Silver, Gold) séparent le brut, le nettoyé et l'exposé. On sait à tout moment où on en est, et on peut tester chaque étage.</li>
+        <li>On fait de l'ELT et non de l'ETL : on charge d'abord la donnée dans BigQuery, puis on la transforme avec dbt. C'est plus simple à maintenir, versionné dans Git et rejouable.</li>
+        <li>On mélange batch et temps réel selon le besoin réel : CDC pour les bases transactionnelles où la fraîcheur compte, ingestion par lots pour les applications.</li>
+        <li>Chaque brique open-source peut être remplacée sans tout casser, ce qui limite la dépendance à un fournisseur.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>Sécurité &amp; gouvernance</h3>
+      <ul>
+        <li>IAM au moindre privilège, service accounts dédiés par usage.</li>
+        <li><b>Workload Identity Federation</b> : CI/CD sans clé statique.</li>
+        <li>VPC Service Controls + Secret Manager pour cloisonner et protéger les secrets.</li>
+        <li>Environnements <b>dev / staging / prod</b> isolés (datasets et/ou projets séparés).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3 : GitOps/DataOps + trade-offs -->
+<div class="page">
+  <h2>Focus GitOps &amp; DataOps</h2>
+  <div class="cols">
+    <div class="col">
+      <h3>GitOps</h3>
+      <ul>
+        <li><b>Git = source de vérité</b> pour l'infra ET les données.</li>
+        <li><b>Terraform</b> pour toutes les ressources cloud (projet, BigQuery, GKE, IAM, réseau).</li>
+        <li>Outils open-source déployés sur <b>GKE</b> via <b>Helm</b> + <b>ArgoCD/Flux</b> (état déclaratif réconcilié en continu).</li>
+        <li>Toute modification passe par une <b>Pull Request</b> revue et validée.</li>
+      </ul>
+    </div>
+    <div class="col">
+      <h3>DataOps</h3>
+      <ul>
+        <li><b>CI dbt sur PR</b> : build en environnement éphémère + tests, avec <b>Slim CI</b> (<span class="tag">state:modified+</span>) pour ne recalculer que l'impacté.</li>
+        <li><b>Contrats de données</b> &amp; tests bloquants pour éviter les régressions.</li>
+        <li><b>Observabilité data</b> (Elementary) + monitoring infra (Prometheus/Grafana ou Cloud Monitoring).</li>
+        <li><b>Lineage</b> automatique via dbt + DataHub, du champ source au dashboard.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Compromis assumés</h2>
+  <p>Aucune architecture n'est parfaite. Voici les principaux arbitrages et la logique derrière chacun.</p>
+  <table>
+    <tr><th style="width:26%">Sujet</th><th>Décision et justification</th></tr>
+    <tr><td>BigQuery malgré l'exigence open-source</td>
+        <td>BigQuery reste le moteur analytique de référence sur GCP : serverless, scalable et économique. On assume ce choix managé, mais on garde la main sur la portabilité grâce à une couche de transformation indépendante (dbt) et, si le client le souhaite, à des formats de tables ouverts (BigLake / Iceberg sur Cloud Storage).</td></tr>
+    <tr><td>Connecteur SAP</td>
+        <td>C'est le point le plus délicat. Les connecteurs SAP côté Airbyte sont parfois incomplets. Si c'est le cas, on prévoit une extraction dédiée (SAP SLT ou export Datasphere) plutôt que de forcer un connecteur inadapté.</td></tr>
+    <tr><td>Batch ou temps réel</td>
+        <td>On ne met pas du streaming partout. Le CDC est réservé aux sources où la fraîcheur est vraiment utile ; le reste passe par du batch, plus simple à exploiter.</td></tr>
+    <tr><td>Managé ou auto-hébergé</td>
+        <td>On auto-héberge les outils open-source sur GKE (Airbyte, Dagster, Superset, DataHub) pour garder la maîtrise et maîtriser les coûts. On bascule sur du managé (Vertex AI, Composer) quand l'effort d'exploitation ne se justifie pas.</td></tr>
+  </table>
+
+  <div class="note">
+    <b>Lien avec la Partie 2.</b> Le code livré met en pratique cette vision à petite échelle : Terraform
+    crée le projet GCP, les datasets BigQuery et le service account ; dbt matérialise une couche staging puis
+    un data mart ; GitHub Actions lance dbt sur chaque pull request, avec une authentification par Workload
+    Identity Federation (donc sans clé stockée).
+  </div>
+</div>
+
+</body>
+</html>
