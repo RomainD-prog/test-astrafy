@@ -22,8 +22,8 @@
 {%- if execute -%}
     {% set cutoff_query %}
         select cast(
-            date_sub(date(max(block_timestamp_month)), interval {{ months }} month) as string
-        ) as cutoff_date
+    date_sub(date(max(block_timestamp_month)), interval {{ months - 1 }} month) as string
+) as cutoff_date
         from {{ source('crypto_bitcoin_cash', 'transactions') }}
     {% endset %}
     {%- set cutoff_date = run_query(cutoff_query).columns[0].values()[0] -%}
@@ -32,12 +32,9 @@
 {%- endif %}
 
 with source as (
-
     select *
     from {{ source('crypto_bitcoin_cash', 'transactions') }}
     where block_timestamp_month >= date('{{ cutoff_date }}')
-      and block_timestamp >= timestamp(date('{{ cutoff_date }}'))
-
 )
 
 select
