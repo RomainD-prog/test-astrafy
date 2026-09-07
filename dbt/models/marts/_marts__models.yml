@@ -18,3 +18,9 @@ models:
           - not_null
       - name: balance_bch
         description: "Net balance converted to BCH (satoshi / 1e8)."
+
+      - name: balance_test
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: true
